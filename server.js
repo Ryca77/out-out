@@ -5,13 +5,14 @@ var mongoose = require('mongoose');
 var config = require('./config');
 
 //var app = express();
-var jsonParser = bodyParser.json();
+//var jsonParser = bodyParser.json();
 
 var app = require('express')();
 var server = require('http').Server(app);
 
 var User = require('./models/user');
 
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
@@ -48,7 +49,8 @@ if (require.main === module) {
 
 //create new users
 app.post('/api/registration', function(req, res) {
-	console.log(req);
+	console.log(req.body);
+	res.send(req.body);
 
 	/*if(!req.body) {
 		return res.status(400).json({
