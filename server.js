@@ -60,35 +60,6 @@ app.post('/api/registration', function(req, res) {
 		});
 	}
 
-	if(!('email' in req.body)) {
-		return res.status(422).json({
-			message: "Missing field: email"
-		});
-	}
-
-	var email = req.body.email;
-
-	if(typeof email !== 'string') {
-		return res.status(422).json({
-			message: "incorrect field type: email"
-		});
-	}
-
-	email = email.trim();
-
-	if(email === '') {
-		return res.status(422).json({
-			message: "Incorrect field length: email"
-		});
-	}
-
-	//ENSURE EMAIL CONTAINS AT SYMBOL
-	/*if(!('@' in email)) {
-		return res.status(422).json({
-			message: "Missing chatacter: email"
-		});
-	}*/
-
 	if(!('username' in req.body)) {
 		return res.status(422).json({
 			message: "Missing field: username"
@@ -108,6 +79,35 @@ app.post('/api/registration', function(req, res) {
 	if(username === '') {
 		return res.status(422).json({
 			message: "Incorrect field length: username"
+		});
+	}
+
+	//ENSURE EMAIL CONTAINS AT SYMBOL
+	/*if(!('@' in email)) {
+		return res.status(422).json({
+			message: "Missing chatacter: email"
+		});
+	}*/
+
+	if(!('email' in req.body)) {
+		return res.status(422).json({
+			message: "Missing field: email"
+		});
+	}
+
+	var email = req.body.email;
+
+	if(typeof email !== 'string') {
+		return res.status(422).json({
+			message: "incorrect field type: email"
+		});
+	}
+
+	email = email.trim();
+
+	if(email === '') {
+		return res.status(422).json({
+			message: "Incorrect field length: email"
 		});
 	}
 
@@ -149,8 +149,8 @@ app.post('/api/registration', function(req, res) {
 			}
 
 			var user = new User({
-				email: email,
 				username: username,
+				email: email,
 				password: hash
 			});
 
@@ -171,7 +171,7 @@ app.post('/api/registration', function(req, res) {
 //REMOVE LATER
 //get route to check registration info being saved to db
 app.get('/api/regInfo', function(req, res) {
-	User.find({}, 'email username password', function(err, data) {
+	User.find({}, 'username email password', function(err, data) {
 		if (err) {
             throw err;
         } else {
@@ -190,7 +190,6 @@ app.get('/api/regInfo', function(req, res) {
     }
 });*/
 
-//add password hashing
 
 
 
