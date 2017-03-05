@@ -1,5 +1,6 @@
 var http = require('http');
 var express = require('express');
+var session = require('express-session');
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
 var config = require('./config');
@@ -18,6 +19,13 @@ var User = require('./models/user');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.static('public'));
+
+app.use(session({
+    secret: 'no one saw this',
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false }
+}));
 
 app.get('/', function(request, response) {
     response.send("Hello World!");
@@ -225,14 +233,17 @@ app.use(passport.initialize());
 
 app.get('/api/authentication', passport.authenticate('basic', {session: false}), function(req, res) {
 	console.log(req.user.username);
+	var session = req.session;
+	session.username = req.user.username;
+	console.log(session);
 	res.send({redirect: '/user.html', user: req.user.username});
 });
 
 //get route to send logged in user info to front end
 app.get('/api/globalUserAttributes', function(req, res) {
-	console.log(req.session);
+	var session = req.session;
+	res.send(session.username);
 });
-
 
 
 exports.app = app;
