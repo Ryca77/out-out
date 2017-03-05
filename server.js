@@ -4,6 +4,8 @@ var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
 var config = require('./config');
 var bcrypt = require('bcryptjs');
+var passport = require('passport');
+var BasicStrategy = require('passport-http').BasicStrategy;
 
 //var app = express();
 //var jsonParser = bodyParser.json();
@@ -161,7 +163,6 @@ app.post('/api/registration', function(req, res) {
 					message: "Internal server error"
 				});
 			}
-
 				return res.status(201).json({});
 			});
 		});
@@ -190,10 +191,48 @@ app.get('/api/regInfo', function(req, res) {
     }
 });*/
 
+//passport authentication to sign in users
+var strategy = new BasicStrategy(function(email, password, callback) {
+	User.findOne({
+		email: email
+	}, function(err, user) {
+		if(err) {
+			callback(err);
+			return;
+		}
+		if(!user) {
+			return callback(null, false, {
+				message: "Incorrect email"
+			});
+		}
+		user.validatePassword(password, function(err, isValid) {
+			if(err) {
+				return callback(err);
+			}
+			if(!isValid) {
+				return callback(null, false, {
+					message: "incorrect password"
+				});
+			}
+			return callback(null, user);
+		});
+	});
+});
 
+passport.use(strategy);
 
+app.use(passport.initialize());
 
-//add passport authentication
+app.get('/api/authentication', passport.authenticate('basic', {session: false}), function(req, res) {
+	console.log(req.user.username);
+	res.send({redirect: '/user.html', user: req.user.username});
+});
+
+//get route to send logged in user info to front end
+app.get('/api/globalUserAttributes', function(req, res) {
+	console.log(req.session);
+});
+
 
 
 exports.app = app;
