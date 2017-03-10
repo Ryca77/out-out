@@ -19,13 +19,14 @@ var User = require('./models/user');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.static('public'));
-
 app.use(session({
     secret: 'no one saw this',
     resave: false,
     saveUninitialized: true,
     cookie: { secure: false }
 }));
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.get('/', function(request, response) {
     response.send("Hello World!");
@@ -199,7 +200,7 @@ app.get('/api/regInfo', function(req, res) {
     }
 });*/
 
-//passport authentication to sign in users
+//passport authentication strategy to sign in users
 var strategy = new BasicStrategy(function(email, password, callback) {
 	User.findOne({
 		email: email
@@ -229,14 +230,24 @@ var strategy = new BasicStrategy(function(email, password, callback) {
 
 passport.use(strategy);
 
-app.use(passport.initialize());
-
+//get route for authentication
 app.get('/api/authentication', passport.authenticate('basic', {session: false}), function(req, res) {
 	console.log(req.user.username);
 	var session = req.session;
 	session.username = req.user.username;
-	console.log(session);
 	res.send({redirect: '/user.html', user: req.user.username});
+});
+
+//NOT WORKING
+//get route for user logout
+app.get('/api/logOut', function(req, res) {
+	console.log('log out please');
+	req.logout();
+	var session = req.session;
+	req.session.destroy(function(err) {
+		res.send(session);
+		//res.send({redirect: '/'});
+	});
 });
 
 //get route to send logged in user info to front end
