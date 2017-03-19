@@ -1,5 +1,10 @@
 $(document).ready(function() {
 
+	//destroy session
+	/*$.get('/api/destroySession', function(response) {
+		console.log(response);
+	})*/
+
 	//collect registration details and send to server
 	var newUser = function() {
 		var username = $('.username').val();
@@ -45,7 +50,7 @@ $(document).ready(function() {
 		if(email.length && password.length) {
 			$.get('/api/authentication', params, function(response) {
 				window.location = response.redirect;
-				console.log(response);
+				console.log(response.user);
 			});
 		}
 	}
@@ -53,9 +58,6 @@ $(document).ready(function() {
 	$('.log-submit').on('click', function() {
 		userAuthentication();
 	});
-
-	//get route to send logged in user info to front end
-
 
 	//show login and sign up fields and submit buttons
 	$('.register').on('click', function() {

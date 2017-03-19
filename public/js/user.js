@@ -11,7 +11,7 @@ $(document).ready(function() {
 	var userLogout = function() {
 		$.get('/api/logOut', function(response) {
 			console.log('logged out');
-			console.log(response);
+			console.log(response.session);
 			//window.location = response.redirect;
 		});
 	}

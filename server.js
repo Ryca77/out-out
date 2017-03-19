@@ -6,6 +6,7 @@ var mongoose = require('mongoose');
 var config = require('./config');
 var bcrypt = require('bcryptjs');
 var passport = require('passport');
+var logout = require('express-passport-logout');
 var BasicStrategy = require('passport-http').BasicStrategy;
 
 //var app = express();
@@ -230,27 +231,48 @@ var strategy = new BasicStrategy(function(email, password, callback) {
 
 passport.use(strategy);
 
-//get route for authentication
-app.get('/api/authentication', passport.authenticate('basic', {session: false}), function(req, res) {
+//LOCAL STRATEGY - NEED TO WRITE THE STRATEGY ABOVE
+//get route for local authentication
+app.get('/api/authentication', passport.authenticate('local'), function(req, res) {
+	console.log(req.user);
 	console.log(req.user.username);
 	var session = req.session;
 	session.username = req.user.username;
 	res.send({redirect: '/user.html', user: req.user.username});
 });
 
-//NOT WORKING
+//get route for basic authentication
+/*app.get('/api/authentication', passport.authenticate('basic', {session: false}), function(req, res) {
+	console.log(req.user);
+	console.log(req.user.username);
+	var session = req.session;
+	session.username = req.user.username;
+	res.send({redirect: '/user.html', user: req.user.username});
+});*/
+
 //get route for user logout
 app.get('/api/logOut', function(req, res) {
 	console.log('log out please');
 	req.logout();
 	var session = req.session;
-	req.session.destroy(function(err) {
-		res.send(session);
-		//res.send({redirect: '/'});
+	req.session.destroy(function() {
+		res.clearCookie('connect.sid', {path: '/'});
+		res.send({redirect: '/', session: session});
 	});
 });
 
-//get route to send logged in user info to front end
+//get route to destroy session when user lands on login page
+/*app.get('/api/destroySession', function(req, res) {
+	console.log('destroy');
+	req.logout();
+	var session = req.session;
+	req.session.destroy(function() {
+		res.clearCookie('connect.sid', {path: '/'});
+		res.send({session: session})
+	});
+});*/
+
+//get route to send logged in user info to logged in front end
 app.get('/api/globalUserAttributes', function(req, res) {
 	var session = req.session;
 	res.send(session.username);
