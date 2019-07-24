@@ -6,6 +6,7 @@
 <link type="text/css" rel="stylesheet" href="style.css">
 <script src="//code.jquery.com/jquery-2.1.0.js"></script>
 <script src="/js/user.js"></script>
+<script src="/socket.io/socket.io.js"></script>
 </head>
 
 <body>
@@ -15,4 +16,17 @@
     <div class="user" id="user"></div>
     <br></br>
     <button class="logout" id="logout">Sign Out</button>
+    <br></br>
+    <button class="newevent" id="newevent">Create a party!</button>
+    <br></br>
+    <button class="findfriends" id="findfriends">Find Friends</button>
+    <div class="user-list" style="display: none"></div>
+    <br></br>
+    <div class="chat-overlay">
+        <div class="chat" id="chat"></div>
+        <textarea class="message" rows="2" cols="30" placeholder=""></textarea>
+        <br></br>
+        <button class="send" id="send">Send</button>
+        <img class="chat-close">
+    </div>
 </body>

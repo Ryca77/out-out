@@ -14,6 +14,8 @@ var BasicStrategy = require('passport-http').BasicStrategy;
 
 var app = require('express')();
 var server = require('http').Server(app);
+var io = require('socket.io')(server);
+var sharedSession = require('express-socket.io-session');
 
 var User = require('./models/user');
 
@@ -22,12 +24,16 @@ app.use(bodyParser.json());
 app.use(express.static('public'));
 app.use(session({
     secret: 'no one saw this',
+    saveUninitialized: false,
     resave: false,
-    saveUninitialized: true,
     cookie: { secure: false }
 }));
 app.use(passport.initialize());
 app.use(passport.session());
+
+io.use(sharedSession(session, {
+    autoSave:true
+}));
 
 app.get('/', function(request, response) {
     response.send("Hello World!");
@@ -94,10 +100,10 @@ app.post('/api/registration', function(req, res) {
 		});
 	}
 
-	//ENSURE EMAIL CONTAINS AT SYMBOL
+	//ENSURE EMAIL CONTAINS @ SYMBOL
 	/*if(!('@' in email)) {
 		return res.status(422).json({
-			message: "Missing chatacter: email"
+			message: "Missing character: email"
 		});
 	}*/
 
@@ -233,16 +239,7 @@ passport.use(strategy);
 
 //LOCAL STRATEGY - NEED TO WRITE THE STRATEGY ABOVE
 //get route for local authentication
-app.get('/api/authentication', passport.authenticate('local'), function(req, res) {
-	console.log(req.user);
-	console.log(req.user.username);
-	var session = req.session;
-	session.username = req.user.username;
-	res.send({redirect: '/user.html', user: req.user.username});
-});
-
-//get route for basic authentication
-/*app.get('/api/authentication', passport.authenticate('basic', {session: false}), function(req, res) {
+/*app.get('/api/authentication', passport.authenticate('local'), function(req, res) {
 	console.log(req.user);
 	console.log(req.user.username);
 	var session = req.session;
@@ -250,22 +247,58 @@ app.get('/api/authentication', passport.authenticate('local'), function(req, res
 	res.send({redirect: '/user.html', user: req.user.username});
 });*/
 
+//get route for basic authentication
+app.get('/api/authentication', passport.authenticate('basic', {session: false}), function(req, res) {
+	var session = req.session;
+	session.username = req.user.username;
+	session.userid = req.user._id;
+	res.send({redirect: '/user.html', user: req.user.username, userId: req.user._id});
+	console.log(req.user);
+	console.log(req.user.username);
+	console.log(req.user._id);
+});
+
 //get route for user logout
 app.get('/api/logOut', function(req, res) {
+	req.logout();
+	var session = req.session;
+	req.session.destroy(function(err) {
+		if (err) {
+			return next(err);
+		}
+		return res.send({redirect: '/', success: true, session: session});
+	});
+	console.log(session);
 	console.log('log out please');
+});
+
+/*app.get('/api/logOut', function(req, res) {
+	req.session.destroy(function(err) {
+		if (err) {
+			return next(err);
+		}
+		var session = req.session;
+		res.send({redirect: '/', session: session});
+		console.log(session);
+	});
+	console.log('log out please');
+});*/
+
+/*app.get('/api/logOut', function(req, res) {
 	req.logout();
 	var session = req.session;
 	req.session.destroy(function() {
-		res.clearCookie('connect.sid', {path: '/'});
+		res.clearCookie('cookie', {path: '/'});
 		res.send({redirect: '/', session: session});
 	});
-});
+	console.log('log out please');
+});*/
 
 //get route to destroy session when user lands on login page
 /*app.get('/api/destroySession', function(req, res) {
-	console.log('destroy');
 	req.logout();
 	var session = req.session;
+	req.session = null
 	req.session.destroy(function() {
 		res.clearCookie('connect.sid', {path: '/'});
 		res.send({session: session})
@@ -275,7 +308,20 @@ app.get('/api/logOut', function(req, res) {
 //get route to send logged in user info to logged in front end
 app.get('/api/globalUserAttributes', function(req, res) {
 	var session = req.session;
-	res.send(session.username);
+	console.log(session);
+	res.send(session);
+});
+
+//send user list when requested
+app.get('/api/getUserList', function(req, res) {
+	User.find({}, 'username', function(err, data) {
+		if (err) {
+            throw err;
+        } else {
+            console.log(data);
+            res.send(data);
+        }
+    });
 });
 
 
