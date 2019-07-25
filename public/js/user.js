@@ -24,24 +24,76 @@ $(document).ready(function() {
 		userLogout();
 	});
 
-	//search users and connect with friends
+	//show list of users
+	//NEED FUNCTIONALITY TO CONNECT WITH USERS AND CREATE FRIENDS LIST
 	$('.findfriends').on('click', function() {
 		$(this).hide();
 		
 		$.get('api/getUserList', function(users) {
 			var userList = users
+			
 			console.log(users);
 			for(var i = 0; i < users.length; i++) {
 				var userName = users[i].username;
 				var userId = users[i]._id;
 				if(loggedInUserId !== userId) {
-					$('.user-list').append('<p class="userlistitem" data-id="' + userId + '">' + userName + ' ' + '<button class="addUser">' + "Add" + '</button>' + '</p>')
-					$('.user-list').show();
+					$('.userlist').append('<p class="userlistitem" data-id="' + userId + '">' + userName + ' ' + '<button class="adduser">' + "Add" + '</button>' + '</p>')
+					$('.userlist').show();
 				}
 				console.log(userName);
 				console.log(userId);
 			}
 		});
+		createInviteList();
 	});
+	//add users to array to invite to event
+	var createInviteList = function() {
+		var inviteList = [];
+		$('.userlist').on('click', '.adduser', function() {
+			var invited = $(this).parent().data('id');
+			$(this).hide();
+			$(this).parent().append('<button class="added">' + "Added" + '</button>');
+			$('.invite').show();
+			inviteList.push(invited);
+		});
+
+		//invite users to event
+		$('.sendinvite').on('click', function() {
+			var newInvite = $('.eventtitle').val();
+			console.log(newInvite);
+			if(newInvite.length) {
+				var params = {inviteList};
+				$.get('api/addUsersToEvent', params, function(response) {
+					console.log(response);
+				});
+			}
+		});
+		
+	}
+
+
+	/*var inviteList = [];
+	$('.userlist').on('click', '.adduser', function() {
+		var invited = $(this).parent().data('id');
+		$(this).hide();
+		$(this).parent().append('<button class="added">' + "Added" + '</button>');
+		$('.invite').show();
+		inviteList.push(invited);
+	});*/
+	
+
+	//invite users to event
+		/*$('.sendinvite').on('click', function() {
+			var newInvite = $('.eventtitle').val();
+			console.log(newInvite);
+			if(newInvite.length) {
+				var params = {inviteList};
+				$.get('api/addUsersToEvent', params, function(response) {
+					console.log(response);
+				});
+			}
+		});*/
+
+	
 
 });

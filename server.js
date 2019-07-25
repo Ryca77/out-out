@@ -324,6 +324,14 @@ app.get('/api/getUserList', function(req, res) {
     });
 });
 
+//add invited users to event
+app.get('/api/addUsersToEvent', function(req, res) {
+	var inviteList = req.query.inviteList;
+	console.log(inviteList);
+	//need to connect array of users in chat room
+	res.send('got ids');
+});
+
 
 exports.app = app;
 exports.runServer = runServer;
