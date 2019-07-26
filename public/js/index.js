@@ -78,17 +78,4 @@ $(document).ready(function() {
 		$('.reg-submit').hide();
 	});
 
-	//search users and connect with friends
-	$('.findfriends').on('click', function() {
-		$(this).hide();
-		
-		$.get('api/getUserList', param, function(response) {
-			console.log(response);
-			userList(response);
-		});
-	});
-
-
-
-
 });

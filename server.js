@@ -18,6 +18,7 @@ var io = require('socket.io')(server);
 var sharedSession = require('express-socket.io-session');
 
 var User = require('./models/user');
+var Chat = require('./models/chat');
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -294,7 +295,7 @@ app.get('/api/logOut', function(req, res) {
 	console.log('log out please');
 });*/
 
-//get route to destroy session when user lands on login page
+//destroy session when user lands on login page
 /*app.get('/api/destroySession', function(req, res) {
 	req.logout();
 	var session = req.session;
@@ -305,7 +306,7 @@ app.get('/api/logOut', function(req, res) {
 	});
 });*/
 
-//get route to send logged in user info to logged in front end
+//send logged in user info to logged in front end
 app.get('/api/globalUserAttributes', function(req, res) {
 	var session = req.session;
 	console.log(session);
@@ -325,12 +326,127 @@ app.get('/api/getUserList', function(req, res) {
 });
 
 //add invited users to event
+var userIdsInChat = [];
+var userNamesInChat = [];
 app.get('/api/addUsersToEvent', function(req, res) {
-	var inviteList = req.query.inviteList;
+	var session = req.session;
+	var inviteList = req.query.user_info;
+	var eventTitle = req.query.event_title;
+	var timeStamp = Date();
 	console.log(inviteList);
-	//need to connect array of users in chat room
-	res.send('got ids');
+	console.log(eventTitle);
+
+	//loop through invte list and add each one to usersInChat array
+	for (var i = 0; i < inviteList.length; i++) {
+		var invitedId = inviteList[i].userid;
+		var invitedName = inviteList[i].username;
+		console.log(invitedId);
+		console.log(invitedName);
+		userIdsInChat.push(invitedId);
+		userNamesInChat.push(invitedName);
+		console.log(userIdsInChat);
+		console.log(userNamesInChat);
+	};
+	//create new chat in db with all invited users and event title
+	Chat.create({
+		user_ids_in_chat: userIdsInChat,
+		user_names_in_chat: userNamesInChat,
+		event_title: eventTitle,
+		time_stamp: timeStamp
+		}, (function(err, ids) {
+    	if (err) {
+     	   throw err;
+    	} else {
+       		console.log('saved new chat');
+        	checkDb();
+    	}
+        	
+	}));
+	
+	//check if data is being stored and send most recent
+    var checkDb = function () {
+      	Chat.find({}).sort({_id:-1}).limit(1).exec(function(err, data) {
+            if (err) {
+                throw err;
+            } else {
+                console.log(data);
+                res.send(data);
+            }
+        });
+    };
 });
+
+//redirect to chat overlay screen after setting up chat group to display text box
+//connect all user_ids_in_chat in chatroom
+//add all new messages to db
+//push all new messages to user_ids_in_chat (will need to cross reference against logged in user id)
+
+var clients = {};
+var rooms = {};
+
+//connect clients with socket
+io.on('connection', function(socket) {
+    console.log('Client connected');
+    var userId = (socket.handshake.session.user_id);
+    
+    //map user id with socket id and add to clients object
+    socket.on('storeIds', function() {
+        var clientId = socket.id;
+        clients[userId] = {'client_id': clientId};
+        console.log(clients);
+    });
+    
+    //remove ids from clients array on disconnect
+    socket.on('disconnect', function() {
+        delete clients[userId];
+        console.log('removed from clients: ' + userId);
+        console.log(clients);
+    });
+    
+    //joins client to room when conversation is selected
+    /*socket.on('join', function(data) {
+        socket.join(data.room);
+        rooms[userId] = data.room;
+        console.log(rooms);
+        var roomsObj = io.sockets.clients();
+        console.log(roomsObj.adapter.rooms);
+    });
+    
+    //broadcasts messages to current room
+    socket.on('messages', function(data) {
+        var room = data.room;
+        var receiver = data.receiver_id;
+        var senderIcon = data.sender_icon;
+        var newMessage = data.new_message;
+        console.log(data.room);
+        if(rooms.hasOwnProperty(receiver) && rooms[receiver] == room) {
+            socket.broadcast.to(room).emit('messages', room, senderIcon, newMessage);
+        }
+    });
+    
+    //removes client from room when chat overlay is closed
+    socket.on('leave', function(data) {
+        socket.leave(data.room);
+        delete rooms[userId];
+        console.log(rooms);
+        console.log(data.room);
+        var roomsObj = io.sockets.clients();
+        console.log(roomsObj.adapter.rooms);
+    });
+
+    //check if connected user is in the room    
+    app.get('/api/checkInRoom', function(req, res) {
+        var receiverId = req.query.receiver_id;
+        var room = req.query.chat_id;
+        if(rooms.hasOwnProperty(receiverId) && rooms[receiverId] == room) {
+            res.send(true);
+        }
+        else {
+            res.send(false);
+        }
+    });*/
+});
+
 
 
 exports.app = app;
