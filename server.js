@@ -330,7 +330,9 @@ var userIdsInChat = [];
 var userNamesInChat = [];
 app.get('/api/addUsersToEvent', function(req, res) {
 	var session = req.session;
-	var inviteList = req.query.user_info;
+	var chatOrganiserId = req.query.organiser_id;
+	var chatOrganiserName = req.query.organiser_name;
+	var inviteList = req.query.invited_user_info;
 	var eventTitle = req.query.event_title;
 	var timeStamp = Date();
 	console.log(inviteList);
@@ -340,8 +342,6 @@ app.get('/api/addUsersToEvent', function(req, res) {
 	for (var i = 0; i < inviteList.length; i++) {
 		var invitedId = inviteList[i].userid;
 		var invitedName = inviteList[i].username;
-		console.log(invitedId);
-		console.log(invitedName);
 		userIdsInChat.push(invitedId);
 		userNamesInChat.push(invitedName);
 		console.log(userIdsInChat);
@@ -349,6 +349,8 @@ app.get('/api/addUsersToEvent', function(req, res) {
 	};
 	//create new chat in db with all invited users and event title
 	Chat.create({
+		chat_organiser_id: chatOrganiserId,
+		chat_organiser_name: chatOrganiserName,
 		user_ids_in_chat: userIdsInChat,
 		user_names_in_chat: userNamesInChat,
 		event_title: eventTitle,
@@ -376,8 +378,37 @@ app.get('/api/addUsersToEvent', function(req, res) {
     };
 });
 
+//add organiser's first message to db
+app.get('/api/firstMessageToGroup', function(req, res) {
+	var chatId = req.query.chat_id;
+	var organiserAndGroup = req.query.organiser_and_group;
+	var firstMessage = req.query.message;
+	Chat.findByIdAndUpdate({_id: chatId}, {$push: {new_message: {firstMessage}}}, {new: true}, function(err, data) {
+		if (err) {
+			throw err;
+		} else {
+			checkDbForFirstMessage();
+		}
+	});
+	
+	//check if first message is being stored and send most recent
+    var checkDbForFirstMessage = function () {
+      	Chat.find({}).sort({_id:-1}).limit(1).exec(function(err, data) {
+            if (err) {
+                throw err;
+            } else {
+                console.log(data);
+                res.send(data);
+            }
+        });
+    };
+});
+
+//when first message is sent by organiser, all invited user ids receive a pop up saying they've
+//been added to event, with a button that sends them to the chat overlay
+
 //redirect to chat overlay screen after setting up chat group to display text box
-//connect all user_ids_in_chat in chatroom
+//connect chat_organiser and user_ids_in_chat in chatroom
 //add all new messages to db
 //push all new messages to user_ids_in_chat (will need to cross reference against logged in user id)
 

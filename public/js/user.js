@@ -2,7 +2,7 @@ $(document).ready(function() {
 
 	var socket = io();
 
-	var addToEventIcon = './images/add-user-30px.png';
+	var addToEventIcon = './images/add-user-20px.png';
 
 	//get logged in user info
 	$.get('/api/globalUserAttributes', function(response) {
@@ -60,22 +60,50 @@ $(document).ready(function() {
 			$('.invite').show();
 			inviteList.push({"username": invitedName, "userid": invitedId});
 		});
-
-		//invite users to event
+		console.log(loggedInUserId);
+		//create event and set up group
 		$('.sendinvite').on('click', function() {
 			var newInvite = $('.eventtitle').val();
+			$('.chat-overlay').show()
+			$('.eventname').append(newInvite);
 			console.log(newInvite);
 			if(newInvite.length) {
 				var params = {
-					user_info: inviteList,
+					organiser_id: loggedInUserId,
+					organiser_name: loggedInUserName,
+					invited_user_info: inviteList,
 					event_title: newInvite
 				};
 				$.get('api/addUsersToEvent', params, function(response) {
+					console.log(response[0].user_ids_in_chat);
 					console.log(response);
+					var chatId = response[0]._id;
+					var eventGroup = response[0].user_ids_in_chat;
+					var eventOrganiser = response[0].chat_organiser_id;
+					firstMessage(chatId, eventGroup, eventOrganiser);
 				});
 			}
 		});
-	}
+	};
+
+	//first message sent by event organiser
+	var firstMessage = function(chatId, eventGroup, eventOrganiser) {	
+		$('.sendmessage').on('click', function() {
+			console.log(eventGroup);
+			console.log(eventOrganiser);
+			var organserAndGroup = eventOrganiser.concat(',' + eventGroup);
+			console.log(organserAndGroup);
+			var message = $('.message').val();
+			var params = {
+				chat_id: chatId,
+				organiser_and_group: organserAndGroup,
+				message: message
+			};
+			$.get('api/firstMessageToGroup', params, function(response) {
+				console.log(response[0].new_message);
+			});
+		});
+	};
 
 	/*var addLiveMessage = function(room, message) {
         var scrolledToBottom = out.scrollHeight - out.clientHeight <= out.scrollTop + 1;

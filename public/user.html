@@ -17,14 +17,21 @@
     <br></br>
     <button class="logout" id="logout">Sign Out</button>
     <br></br>
-    <button class="newevent" id="newevent">Create a party!</button>
-    <br></br>
-    <button class="findfriends" id="findfriends">Find Friends</button>
+    <button class="findfriends" id="findfriends">Find friends and create an event</button>
     <div class="userlist" style="display: none"></div>
     <br></br>
     <div class="invite" style="display: none">
         <textarea class="eventtitle" rows="1" cols="30" maxlength= "35" placeholder="event"></textarea>
         <br></br>
         <button class="sendinvite" id="sendinvite">Invite</button>
+    </div>
+    <br></br>
+    <div class="chat-overlay" style="display: none">
+        <div class="chat" id="chat"></div>
+        <p class="eventname"></p>
+        <textarea class="message" rows="2" cols="30" placeholder=""></textarea>
+        <button class="sendmessage" id="sendmessage">Send</button>
+        <img class="chat-close" src="/images/close-icon-20px.png">
+        <img class="chat-close" src="/images/send-icon-20px.png">
     </div>
 </body>
