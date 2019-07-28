@@ -1,6 +1,11 @@
 var http = require('http');
 var express = require('express');
-var session = require('express-session');
+var session = require('express-session') ({
+	secret: 'no one saw this',
+    resave: true,
+    saveUninitialized: false,
+    cookie: { secure: false }
+});
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
 var config = require('./config');
@@ -8,6 +13,9 @@ var bcrypt = require('bcryptjs');
 var passport = require('passport');
 var logout = require('express-passport-logout');
 var BasicStrategy = require('passport-http').BasicStrategy;
+
+var User = require('./models/user');
+var Chat = require('./models/chat');
 
 //var app = express();
 //var jsonParser = bodyParser.json();
@@ -17,24 +25,23 @@ var server = require('http').Server(app);
 var io = require('socket.io')(server);
 var sharedSession = require('express-socket.io-session');
 
-var User = require('./models/user');
-var Chat = require('./models/chat');
-
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
-app.use(express.static('public'));
-app.use(session({
-    secret: 'no one saw this',
-    saveUninitialized: false,
-    resave: false,
-    cookie: { secure: false }
-}));
-app.use(passport.initialize());
-app.use(passport.session());
+app.use(session);
 
 io.use(sharedSession(session, {
     autoSave:true
 }));
+
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+app.use(express.static('public'));
+/*app.use(session({
+    secret: 'no one saw this',
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: false }
+}));*/
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.get('/', function(request, response) {
     response.send("Hello World!");
@@ -199,7 +206,7 @@ app.get('/api/regInfo', function(req, res) {
     });
 });
 
-//temporary code to delete everything in chat db while testing
+//temporary code to delete everything in user db while testing
 /*User.remove(function(err, p) {
     if(err){ 
         throw err;
@@ -308,6 +315,7 @@ app.get('/api/logOut', function(req, res) {
 
 //send logged in user info to logged in front end
 app.get('/api/globalUserAttributes', function(req, res) {
+	console.log(req.session);
 	var session = req.session;
 	console.log(session);
 	res.send(session);
@@ -411,6 +419,7 @@ app.get('/api/firstMessageToGroup', function(req, res) {
 //connect chat_organiser and user_ids_in_chat in chatroom
 //add all new messages to db
 //push all new messages to user_ids_in_chat (will need to cross reference against logged in user id)
+//save all subsequent messages to db
 
 var clients = {};
 var rooms = {};
@@ -419,6 +428,7 @@ var rooms = {};
 io.on('connection', function(socket) {
     console.log('Client connected');
     var userId = (socket.handshake.session.user_id);
+    console.log(userId);
     
     //map user id with socket id and add to clients object
     socket.on('storeIds', function() {

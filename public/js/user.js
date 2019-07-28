@@ -124,12 +124,12 @@ $(document).ready(function() {
         });
     };*/
 
-	//emit to server on connection to store store instagram id against socket id
-    /*socket.on('connect', function () {
+	//emit to server on connection to store _id against socket id
+    socket.on('connect', function () {
         socket.emit('storeIds');
     });
     
-    var joinRoom = function(id) {
+    /*var joinRoom = function(id) {
         var room = id;
         socket.emit('join', {room: room});
     };
@@ -146,7 +146,7 @@ $(document).ready(function() {
     };
     
     socket.on('messages', addLiveMessage);*/
-
+    socket.on();
 	
 
 });
